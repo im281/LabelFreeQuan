@@ -2,6 +2,7 @@ source('Xtopia.R')
 source('MassAnalyer.R')
 source('Functions.R')
 source('RocAnalysis.R')
+source('MaxQuant.R')
 
 
 #Read all annotations
@@ -87,16 +88,16 @@ write.csv(matn10Results,"MA-Potato-f10-allreps-TN.csv")
 
 #Open all detected annotations
 ############################################################
-tp1 <- data.table(read.csv("TT-Potato-f9-allreps-TP1.csv"))
+tp1 <- data.table(read.csv("TT-Potato-f1-allreps-TP2.csv"))
 tp1$Classlabel<- rep('TruePositive', nrow(tp1))
 
-tp2 <- data.table(read.csv("TT-Potato-f10-allreps-TP1.csv"))
+tp2 <- data.table(read.csv("TT-Potato-f2-allreps-TP2.csv"))
 tp2$Classlabel<- rep('TruePositive', nrow(tp2))
 
-tn1 <- data.table(read.csv("TT-Potato-f9-allreps-TN1.csv"))
+tn1 <- data.table(read.csv("TT-Potato-f1-allreps-TN1.csv"))
 tn1$Classlabel<- rep('TrueNegative', nrow(tn1))
 
-tn2 <- data.table(read.csv("TT-Potato-f10-allreps-TN1.csv"))
+tn2 <- data.table(read.csv("TT-Potato-f2-allreps-TN1.csv"))
 tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
 ############################################################
 
@@ -107,7 +108,7 @@ tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
 finaltp <- rbind(tp1,tp2)
 finaltn <- rbind(tn1,tn2)
 finalAnalysis <- rbind(finaltp,finaltn)
-res <- QuanAnova(finalAnalysis,9,10)
+res <- QuanAnova(finalAnalysis,1,2)
 final <- res[ClassLabel != 'unknown']
 RocResults <- MyRocR(final)
 RocResults[['AUC']]
@@ -119,19 +120,19 @@ plot(RocResults[[1]]@x.values[[1]], RocResults[[1]]@y.values[[1]],
 
 #Open all detected annotations
 ############################################################
-data <- fread("MA-Potato-f7-allreps-TP.csv")
+data <- fread("MA-Potato-f1-allreps-TP.csv")
 tp1 <- data
 tp1$Classlabel<- rep('TruePositive', nrow(tp1))
 
-data <- fread("MA-Potato-f8-allreps-TP.csv")
+data <- fread("MA-Potato-f2-allreps-TP.csv")
 tp2 <- data
 tp2$Classlabel<- rep('TruePositive', nrow(tp2))
 
-data <- fread("MA-Potato-f7-allreps-TN.csv")
+data <- fread("MA-Potato-f1-allreps-TN.csv")
 tn1 <- data
 tn1$Classlabel<- rep('TrueNegative', nrow(tn1))
 
-data <- fread("MA-Potato-f8-allreps-TN.csv")
+data <- fread("MA-Potato-f2-allreps-TN.csv")
 tn2 <- data
 tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
 #Run Roc Mass Analyzer
@@ -139,10 +140,59 @@ tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
 finaltp <- rbind(tp1,tp2)
 finaltn <- rbind(tn1,tn2)
 finalAnalysis <- rbind(finaltp,finaltn)
-res <- QuanAnova(finalAnalysis,7,8)
-write.csv(res,"MA-ttest-7-8.csv")
+res <- QuanAnova(finalAnalysis,1,2)
+#write.csv(res,"MA-ttest-7-8.csv")
 final <- res[ClassLabel != 'unknown']
 RocResults <- MyRocR(final)
 RocResults[['AUC']]
 plot(RocResults[[1]]@x.values[[1]], RocResults[[1]]@y.values[[1]], 
      type='l', xlab=RocResults[[1]]@x.name, ylab=RocResults[[1]]@y.name)
+
+
+
+
+#MaxQuant
+##########################################################
+write.csv(mq,'MaxQuantFeatures.csv')
+mq <- fread('MaxQuantFeatures.csv')
+table <- MaxQuantSearch(tn,mq,4)
+write.csv(table,"MaxQuant-Potato-f4-allreps-TN.csv")
+
+#Open all detected annotations
+############################################################
+data <- fread("MaxQuant-Potato-f4-allreps-TP.csv")
+tp1 <- data
+tp1$Classlabel<- rep('TruePositive', nrow(tp1))
+
+data <- fread("MaxQuant-Potato-f5-allreps-TP.csv")
+tp2 <- data
+tp2$Classlabel<- rep('TruePositive', nrow(tp2))
+
+data <- fread("MaxQuant-Potato-f4-allreps-TN.csv")
+tn1 <- data
+tn1$Classlabel<- rep('TrueNegative', nrow(tn1))
+
+data <- fread("maxQuant-Potato-f5-allreps-TN.csv")
+tn2 <- data
+tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
+#Run Roc Mass Analyzer
+############################################################
+finaltp <- rbind(tp1,tp2)
+finaltn <- rbind(tn1,tn2)
+finalAnalysis <- rbind(finaltp,finaltn)
+res <- QuanAnova(finaltn,4,5)
+final <- res[ClassLabel != 'unknown']
+RocResults <- MyRocR(final)
+RocResults[['AUC']]
+plot(RocResults[[1]]@x.values[[1]], RocResults[[1]]@y.values[[1]], 
+     type='l', xlab=RocResults[[1]]@x.name, ylab=RocResults[[1]]@y.name)
+
+
+p <- res[ClassLabel == 'TrueNegative']
+p <- p[Estimate != 0]
+p$Estimate <- log(p$Estimate,2)
+mean(p$Estimate)
+sd(p$Estimate)
+(sd(p$Estimate)/mean(p$Estimate)) * 100
+boxplot(pep$PeakArea ~ Dilution, data = pep)
+

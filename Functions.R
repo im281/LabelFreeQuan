@@ -970,11 +970,111 @@ GetUniquePeptides <-function(x){
 
 
 
-LogRatioAnalysis <- function(x,species){
+LogRatioAnalysisTT <- function(x,species){
   
   x <-  x[grep(species, ParentProteinDescriptions)]
   x <- x[MatchConfidence == 3]
 
+  uniquePeptides <-unique(x$Sequence)
+  
+  resTable <- data.table(
+    PeptideSequence = character(),
+    DetectedMZ = numeric(),
+    Concentration = numeric(),
+    AveValue = numeric()) 
+  
+  for(i in 1:length(uniquePeptides)){
+    
+    #get all psms for this peptide sequence
+    pep <- x[Sequence == uniquePeptides[i]]
+    
+    pep <- pep[PeakArea != 'NA']
+    
+    detectedMass <- mean(pep$MassOverCharge)
+    
+    #get maximum peak area per condition
+    pep <- pep[,list(MaxArea=max(PeakArea)),
+                by=list(Sequence,SpectrumFileName)]
+    
+    #get averages for each condition
+    #get max for now since there is no gap filling
+    dt1 <- pep[grep('_3ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt1$MaxArea))
+    
+    if(is.na(aveValue) == FALSE){
+    t1 <- data.table(
+      PeptideSequence = uniquePeptides[i],
+      DetectedMZ = detectedMass,
+      Concentration = 3,
+      AveValue = aveValue)
+    
+    resTable <- rbind(resTable,t1)
+    }
+    
+    dt2 <- pep[grep('_5ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt2$MaxArea))
+    
+    if(is.na(aveValue) == FALSE){
+    t2 <- data.table(
+      PeptideSequence = uniquePeptides[i],
+      DetectedMZ = detectedMass,
+      Concentration = 5,
+      AveValue = aveValue)    
+       
+    resTable <- rbind(resTable,t2)
+    }
+    
+    
+    dt3 <- pep[grep('_7-5ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt3$MaxArea))
+    
+    if(is.na(aveValue) == FALSE){
+    t3 <- data.table(
+      PeptideSequence = uniquePeptides[i],
+      DetectedMZ = detectedMass,
+      Concentration = 7.5,
+      AveValue = aveValue)
+    
+    resTable <- rbind(resTable,t3)
+    }
+    
+    dt4 <- pep[grep('_10ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt4$MaxArea))
+    
+    if(is.na(aveValue) == FALSE){
+    t4 <- data.table(
+      PeptideSequence = uniquePeptides[i],
+      DetectedMZ = detectedMass,
+      Concentration = 10,
+      AveValue = aveValue) 
+    
+    resTable <- rbind(resTable,t4)
+    }
+    
+    dt5 <- pep[grep('_15ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt5$MaxArea))
+    
+    if(is.na(aveValue) == FALSE){
+    t5 <- data.table(
+      PeptideSequence = uniquePeptides[i],
+      DetectedMZ = detectedMass,
+      Concentration = 15,
+      AveValue = aveValue) 
+    
+    resTable <- rbind(resTable,t5)
+    }
+        
+  } 
+  
+  return (resTable)
+  
+}
+
+LogRatioAnalysisMinora <- function(x,species){
+  
+  x <-  x[grep(species, ParentProteinDescriptions)]
+  x <- x[MatchConfidence == 3]
+  
   uniquePeptides <-unique(x$Sequence)
   
   resTable <- data.table(
@@ -994,93 +1094,92 @@ LogRatioAnalysis <- function(x,species){
     
     #get maximum peak area per condition
     pep <- pep[,list(MaxArea=max(Area)),
-                by=list(Sequence,SpectrumFileName)]
+               by=list(Sequence,SpectrumFileName)]
     
     #get averages for each condition
-    dt1 <- pep[grep('3ng',pep$SpectrumFileName)]
-    aveValue <-mean(dt1$MaxArea)
+    #get max for now since there is no gap filling
+    dt1 <- pep[grep('_3ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt1$MaxArea))
     
     if(is.na(aveValue) == FALSE){
-    t1 <- data.table(
-      PeptideSequence = uniquePeptides[i],
-      DetectedMZ = detectedMass,
-      Concentration = 3,
-      AveValue = aveValue)
-    
-    resTable <- rbind(resTable,t1)
+      t1 <- data.table(
+        PeptideSequence = uniquePeptides[i],
+        DetectedMZ = detectedMass,
+        Concentration = 3,
+        AveValue = aveValue)
+      
+      resTable <- rbind(resTable,t1)
     }
     
-    dt2 <- pep[grep('5ng',pep$SpectrumFileName)]
-    aveValue <-mean(dt2$MaxArea)
+    dt2 <- pep[grep('_5ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt2$MaxArea))
     
     if(is.na(aveValue) == FALSE){
-    t2 <- data.table(
-      PeptideSequence = uniquePeptides[i],
-      DetectedMZ = detectedMass,
-      Concentration = 5,
-      AveValue = aveValue)    
-       
-    resTable <- rbind(resTable,t2)
+      t2 <- data.table(
+        PeptideSequence = uniquePeptides[i],
+        DetectedMZ = detectedMass,
+        Concentration = 5,
+        AveValue = aveValue)    
+      
+      resTable <- rbind(resTable,t2)
     }
     
     
-    dt3 <- pep[grep('7-5ng',pep$SpectrumFileName)]
-    aveValue <-mean(dt3$MaxArea)
+    dt3 <- pep[grep('_7-5ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt3$MaxArea))
     
     if(is.na(aveValue) == FALSE){
-    t3 <- data.table(
-      PeptideSequence = uniquePeptides[i],
-      DetectedMZ = detectedMass,
-      Concentration = 7.5,
-      AveValue = aveValue)
-    
-    resTable <- rbind(resTable,t3)
+      t3 <- data.table(
+        PeptideSequence = uniquePeptides[i],
+        DetectedMZ = detectedMass,
+        Concentration = 7.5,
+        AveValue = aveValue)
+      
+      resTable <- rbind(resTable,t3)
     }
     
-    dt4 <- pep[grep('10ng',pep$SpectrumFileName)]
-    aveValue <-mean(dt4$MaxArea)
+    dt4 <- pep[grep('_10ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt4$MaxArea))
     
     if(is.na(aveValue) == FALSE){
-    t4 <- data.table(
-      PeptideSequence = uniquePeptides[i],
-      DetectedMZ = detectedMass,
-      Concentration = 10,
-      AveValue = aveValue) 
-    
-    resTable <- rbind(resTable,t4)
+      t4 <- data.table(
+        PeptideSequence = uniquePeptides[i],
+        DetectedMZ = detectedMass,
+        Concentration = 10,
+        AveValue = aveValue) 
+      
+      resTable <- rbind(resTable,t4)
     }
     
-    dt5 <- pep[grep('15ng',pep$SpectrumFileName)]
-    aveValue <-mean(dt5$MaxArea)
+    dt5 <- pep[grep('_15ng_',pep$SpectrumFileName)]
+    aveValue <-(max(dt5$MaxArea))
     
     if(is.na(aveValue) == FALSE){
-    t5 <- data.table(
-      PeptideSequence = uniquePeptides[i],
-      DetectedMZ = detectedMass,
-      Concentration = 15,
-      AveValue = aveValue) 
-    
-    resTable <- rbind(resTable,t5)
+      t5 <- data.table(
+        PeptideSequence = uniquePeptides[i],
+        DetectedMZ = detectedMass,
+        Concentration = 15,
+        AveValue = aveValue) 
+      
+      resTable <- rbind(resTable,t5)
     }
-        
+    
   } 
   
   return (resTable)
   
 }
 
-ComputeLogRatios <- function(x){
+ComputeLogRatios <- function(x,d1,d2){
   
   #final table
   resTable <- data.table(
     PeptideSequence = character(),
-    Ratio1 = numeric(),
-    Ratio2 = numeric(),
-    Ratio3  = numeric())
+    Ratio = numeric())
   
   
   #log transform Areas
-  x$AveValue <- log(x$AveValue,10)
+  #x$AveValue <- log(x$AveValue,10)
   
   #get all unique peptides sequences
   uniquePeptides <-unique(x$PeptideSequence)
@@ -1088,18 +1187,15 @@ ComputeLogRatios <- function(x){
   for(i in 1:length(uniquePeptides)){
     
       pep <- x[PeptideSequence == uniquePeptides[i]]
-    
-      p5 <- pep[Concentration == 5]
-      p10 <- pep[Concentration == 10]
-      p15 <- pep[Concentration == 15]
       
-      if(nrow(p5) > 0 & nrow(p10) > 0 & nrow(p15) > 0){
-        
+      p1 <- pep[Concentration == d1]
+      p2 <- pep[Concentration == d2]
+      
+      #if(nrow(p5) > 0 & nrow(p10) > 0 & nrow(p15) > 0){
+      if(nrow(p1) > 0 & nrow(p2) > 0){
         resTable <- rbind(resTable,data.table(
           PeptideSequence = uniquePeptides[i],
-          Ratio1 = (p5$AveValue/p5$AveValue),
-          Ratio2 = (p10$AveValue/p5$AveValue),
-          Ratio3 = (p15$AveValue/p5$AveValue)))
+          Ratio = (p2$AveValue/p1$AveValue)))
       }        
   }
   return (resTable)  

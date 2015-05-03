@@ -57,7 +57,7 @@ MA <- function(targets,peakList){
 }
 
 
-MATest <- function(targets,x,d){
+MATest <- function(targets,x,d,decon = FALSE){
   
   finalTable <- data.table(
     PeptideSequence = "NA",
@@ -139,10 +139,20 @@ MATest <- function(targets,x,d){
     
     for(i in 1:nrow(tp)){ 
       tol <- Findtolerance(tp[i]$TheoreticalTargetMass,10)
-      temp <-peakList[m.z < tp[i]$TheoreticalTargetMass + tol &
-                        m.z > tp[i]$TheoreticalTargetMass - tol &
-                        Time < tp[i]$RetentionTimeAtApex + 3.5 &
-                        Time > tp[i]$RetentionTimeAtApex - 3.5]
+      
+      if(decon == TRUE){
+        temp <-peakList[m.z < tp[i]$TheoreticalTargetMass + tol &
+                          m.z > tp[i]$TheoreticalTargetMass - tol &
+                          Time < tp[i]$RetentionTimeAtApex + 3.5 &
+                          Time > tp[i]$RetentionTimeAtApex - 3.5]
+      }
+      else{       
+        temp <-peakList[m.z < tp[i]$TheoreticalTargetMass + tol &
+                          m.z > tp[i]$TheoreticalTargetMass - tol &
+                          Time < tp[i]$RetentionTimeAtApex + 3.5 &
+                          Time > tp[i]$RetentionTimeAtApex - 3.5]
+      }
+
       
       if(nrow(temp) == 0){
         t <-data.table(
@@ -234,6 +244,36 @@ MALogRatioTest <- function(targets,x){
 }
 
 
+GetMimzMass <- function(x)
+{
+  x$A0 <- rep('unknown',nrow(x))
+  for(i in 1:nrow(x)){
+    charge <- 0
+    chargeState <- x[i,]$Identification
+    if(length(grep('(2+)', x[i,]$Identification))){
+      charge <- 2
+    }
+    if(length(grep('(3+)', x[i,]$Identification))){
+      charge <- 3
+    }
+    if(length(grep('(4+)', x[i,]$Identification))){
+      charge <- 4
+    }
+    if(x[i,]$Mass != 0 & charge != 0){
+      mz <- GetA0(charge,x[i,]$Mass)
+      x[i,]$A0 <- mz
+    }  
+  }
+  return(x)
+}
 
+GetA0 <- function(charge,Mass){
   
+  divisor <- 1.0079*(charge - 1) + 1.00727
+  if(Mass != 0){
+    return((as.numeric(Mass)+ divisor)/floor(divisor))
+    
+  }
+  
+}
   

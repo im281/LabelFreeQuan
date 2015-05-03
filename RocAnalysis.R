@@ -80,3 +80,77 @@ QuanAnova <- function(x,dil1,dil2) {
 }
 
 
+RunRoc <- function(detector){
+  par(mfrow=c(3,3))
+  aucList <-list()
+  d = ''
+  tp =''
+  for(i in 1:9){
+    
+    if(i == 2 |i == 3){
+     #do nothing
+    }
+    else{
+      if(detector == 'MassAnalyzer'){
+        d = "MA"
+        tp1 <- paste(d,"-Potato-f",i,"-allreps-TP.csv",sep = "")
+        tp2 <- paste(d,"-Potato-f",i+1,"-allreps-TP.csv",sep = "")
+        tn1 <- paste(d,"-Potato-f",i,"-allreps-TN.csv",sep = "")
+        tn2 <- paste(d,"-Potato-f",i+1,"-allreps-TN.csv",sep = "")
+      }
+      if(detector == 'Xtopia'){
+        d = "TT"
+        tp1 <- paste(d,"-Potato-f",i,"-allreps-TP2.csv",sep = "")
+        tp2 <- paste(d,"-Potato-f",i+1,"-allreps-TP2.csv",sep = "")
+        tn1 <- paste(d,"-Potato-f",i,"-allreps-TN1.csv",sep = "")
+        tn2 <- paste(d,"-Potato-f",i+1,"-allreps-TN1.csv",sep = "")
+      }
+      if(detector == 'MaxQuant'){
+        d = "MaxQuant"
+        tp1 <- paste(d,"-Potato-f",i,"-allreps-TP-Nomatchbetween.csv",sep = "")
+        tp2 <- paste(d,"-Potato-f",i+1,"-allreps-TP-Nomatchbetween.csv",sep = "")
+        tn1 <- paste(d,"-Potato-f",i,"-allreps-TN-Nomatchbetween.csv",sep = "")
+        tn2 <- paste(d,"-Potato-f",i+1,"-allreps-TN-Nomatchbetween.csv",sep = "")
+      }
+      if(detector == 'Minora'){
+        d = "Minora"
+      }
+ 
+    #Open all detected annotations
+    ############################################################
+    tp1 <- data.table(read.csv(tp1))
+    tp1$Classlabel<- rep('TruePositive', nrow(tp1))
+    
+    tp2 <- data.table(read.csv(tp2))
+    tp2$Classlabel<- rep('TruePositive', nrow(tp2))
+    
+    tn1 <- data.table(read.csv(tn1))
+    tn1$Classlabel<- rep('TrueNegative', nrow(tn1))
+    
+    tn2 <- data.table(read.csv(tn2))
+    tn2$Classlabel<- rep('TrueNegative', nrow(tn2))
+    ############################################################
+    
+    #Perform ROC analysis Treetop
+    ############################################################
+    
+    finaltp <- rbind(tp1,tp2)
+    finaltn <- rbind(tn1,tn2)
+    finalAnalysis <- rbind(finaltp,finaltn)
+    res <- QuanAnova(finalAnalysis,i,i + 1)
+    final <- res[ClassLabel != 'unknown']
+    RocResults <- MyRocR(final)
+    RocResults[['AUC']]
+    title <- paste("d",i," ","vs"," ","d",i + 1," ","AUC="," ",round(RocResults[['AUC']],2),sep = "")
+    plot(RocResults[[1]]@x.values[[1]], RocResults[[1]]@y.values[[1]], 
+         type='l', xlab=RocResults[[1]]@x.name, ylab=RocResults[[1]]@y.name,main = title)
+    aucList[[i]] <-  RocResults[['AUC']]
+    #aucList[[i+1]] <- finalAnalysis
+    #aucList[[i+2]] <- res
+    ############################################################
+    }
+  }
+  return (aucList)
+}
+
+
